@@ -1,3 +1,6 @@
+from expansao_cofatores import determinante_expansao_cofatores
+
+
 def main():
     print("Insira a ordem da matriz (2 a 6):")
     while True:
@@ -29,7 +32,8 @@ def main():
     for linha in matriz:
         print(" ".join(str(x) for x in linha))
 
-
+    determinante = determinante_expansao_cofatores(matriz)
+    print(f"Determinante: {determinante}")
 
 if __name__ == "__main__":
     main()

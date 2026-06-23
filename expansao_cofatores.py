@@ -1,34 +1,38 @@
-def menor(m, i, j):
-    # Remove linha i e coluna j da matriz
-    return [ [m[x][y] for y in range(len(m)) if y != j] for x in range(len(m)) if x != i ]
+from typing import List
+
+def matriz_menor(matriz: List[List[int]], i: int, j: int) -> List[List[int]]:
+    """
+    Retorna a matriz menor de uma matriz quadrada.
+    A matriz menor é a matriz resultante da remoção da linha i e da coluna j da matriz original.
+    """
     
-def determinante_expansao_cofatores(matriz):
+    matriz_menor: list[list[int]] = []
+    for x in range(len(matriz)):
+        if x != i: # Não adiciona elementos da linha i
+            linha = []
+            for y in range(len(matriz)):
+                if y != j: # Não adiciona elementos da coluna j
+                    linha.append(matriz[x][y])
+            matriz_menor.append(linha)
+    return matriz_menor
 
+def determinante_expansao_cofatores(matriz: List[List[int]]) -> int:
+    """
+    Calcula o determinante de uma matriz quadrada utilizando a expansão por cofatores.
+    """
+    ordem: int = len(matriz)
+    
+    # Caso base: matriz 1x1
+    if ordem == 1:
+        return matriz[0][0]
+    # Caso base: matriz 2x2
+    if ordem == 2:
+        return matriz[0][0]*matriz[1][1] - matriz[0][1]*matriz[1][0]
 
-    def determinante_recursivo(m):
-        n = len(m)
-        if n == 1:
-            return m[0][0]
-        elif n == 2:
-            return m[0][0]*m[1][1] - m[0][1]*m[1][0]
-        else:
-            det = 0
-            for j in range(n):
-                cof = ((-1) ** (0 + j)) * m[0][j] * determinante_recursivo(menor(m, 0, j))
-                det += cof
-            return det
-
-    def cofactor(m, i, j):
-        # Menor complementar assinado (cofator)
-        return ((-1) ** (i + j)) * determinante_recursivo(menor(m, i, j))
-
-    n = len(matriz)
-    # Matriz de cofatores
-    cofatores = []
-    for i in range(n):
-        linha_cof = []
-        for j in range(n):
-            linha_cof.append(cofactor(matriz, i, j))
-        cofatores.append(linha_cof)
-    det = determinante_recursivo(matriz)
-    return cofatores, det
+    determinante: int = 0
+    for coluna in range(ordem):
+        cofator: int = ((-1) ** coluna)
+        elemento: int = matriz[0][coluna]
+        menor: List[List[int]] = matriz_menor(matriz, 0, coluna)
+        determinante += cofator * elemento * determinante_expansao_cofatores(menor)
+    return determinante
