@@ -1,7 +1,9 @@
 # gaal-matrizes
 
-Trabalho Computacional 3 - GAAL  
-**Determinantes: Expansao por Cofatores vs Operacoes Elementares**
+Trabalho Computacional 3 — GAAL  
+**Determinantes: Expansão por Cofatores vs Operações Elementares**
+
+Programa em Python que calcula o determinante de matrizes quadradas (ordem 2 a 6) por dois métodos, compara resultados, registra etapas e mede desempenho.
 
 ## Como executar
 
@@ -12,46 +14,53 @@ pip install -r requirements.txt
 python main.py
 ```
 
-## Modos do programa
-
-1. **Matriz manual** - digite uma matriz 2x2 ate 6x6, veja determinante, historico, tempos e graficos.
-2. **Benchmark** - gera matrizes aleatorias para ordens 2 a 6 e abre painel com graficos comparativos.
-3. **Matriz aleatoria** - gera uma matriz da ordem escolhida e mostra a analise completa.
-
 ## Estrutura
 
-| Arquivo | Descricao |
-|---------|-----------|
+| Arquivo | Função |
+|---------|--------|
 | `expansao_cofatores.py` | Determinante recursivo por cofatores |
-| `operacoes_elementares.py` | Determinante por triangularizacao |
-| `analise.py` | Benchmark, medicao de tempos e comparacao |
-| `visualizacao.py` | Graficos matplotlib |
+| `operacoes_elementares.py` | Determinante por triangularização |
+| `analise.py` | Benchmark, tempos e comparação |
+| `visualizacao.py` | Gráficos matplotlib |
 | `main.py` | Menu principal |
+| `validar.py` | Testes de corretude |
+| `graficos/` | PNGs gerados (`analise_matriz.png`, `benchmark.png`) |
 
-## Analise obrigatoria (respostas)
+## Lógica — Expansão por Cofatores
 
-### 1. Os resultados coincidiram?
+Implementada em `expansao_cofatores.py`, expande sempre pela **1ª linha** (Laplace):
 
-**Sim.** Para todas as matrizes testadas (ordens 2 a 6), os dois metodos produziram o mesmo determinante, com tolerancia para arredondamento de ponto flutuante no metodo das operacoes elementares.
-
-### 2. Qual metodo foi mais eficiente?
-
-**Operacoes elementares.** O benchmark mostra tempos consistentemente menores e crescimento muito mais lento (aproximadamente O(n³)) em relacao a expansao por cofatores.
-
-### 3. Por que o metodo dos cofatores se torna inviavel para matrizes maiores?
-
-Porque sua complexidade e aproximadamente **O(n!)**: cada nivel da recursao gera n subproblemas menores, e o numero de operacoes explode rapidamente. Nos graficos, isso aparece na curva de operacoes e no tempo (escala log).
-
-### 4. Em quais situacoes o metodo dos cofatores ainda e pedagogicamente util?
-
-- Matrizes pequenas (**2x2** e **3x3**), onde a recursao e facil de acompanhar passo a passo.
-- Demonstracao da definicao de cofator e da estrutura do determinante como polinomio nas entradas.
-- Exercicios teoricos e provas, onde a forma explicita da expansao e mais importante que a eficiencia.
-
-## Validacao
-
-Execute o script de validacao contra `numpy.linalg.det`:
-
-```bash
-python validar.py
 ```
+det(A) = Σ (-1)^j · a[0][j] · det(menor[0][j])
+```
+
+1. Para cada coluna `j`, remove a linha 0 e a coluna `j` → `matriz_menor(matriz, 0, j)`.
+2. Multiplica o elemento `a[0][j]` pelo sinal `(-1)^j` e pelo determinante da menor (recursão).
+3. Soma todos os termos.
+
+**Casos base:** matriz 1×1 retorna o único elemento; matriz 2×2 retorna `ad - bc`.
+
+**Custo:** ~O(n!) — cada nível gera `n` subproblemas menores. O programa registra chamadas recursivas e operações.
+
+## Lógica — Operações Elementares
+
+Implementada em `operacoes_elementares.py`, triangulariza a matriz por **eliminação de Gauss com pivotamento parcial**:
+
+1. Em cada coluna, escolhe o maior pivô (em módulo) e troca linhas se necessário.
+2. Cada troca de linha inverte o sinal do determinante.
+3. Zera os elementos abaixo do pivô: `L_i ← L_i - fator · L_pivô`.
+4. Se a coluna do pivô for inteiramente nula → determinante = 0.
+5. Ao final: `det = (±1) × ∏ diagonal` (sinal conforme trocas; resultado arredondado para inteiro).
+
+**Custo:** ~O(n³) — adequado para matrizes maiores.
+
+## Modos do programa
+
+1. **Matriz manual** — digita a matriz, vê determinante, histórico, tempos e gráfico.
+2. **Benchmark** — matrizes aleatórias (ordens 2 a 6), painel com tempos, operações e speedup.
+3. **Matriz aleatória** — gera matriz da ordem escolhida e exibe análise completa.
+
+## Saídas
+
+- **Terminal:** determinantes, histórico de etapas, tempos, contagem de operações.
+- **Gráficos:** salvos em `graficos/` — matriz inicial, triangular, comparação de tempo e benchmark por ordem.
