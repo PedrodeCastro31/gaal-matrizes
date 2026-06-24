@@ -1,15 +1,35 @@
 from __future__ import annotations
 
+from pathlib import Path
 from typing import List
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
 from analise import ResultadoBenchmark
 
+_PASTA_GRAFICOS = Path(__file__).parent / "graficos"
 
-def _formatar_valores_matriz(matriz: List[List[float | int]]) -> np.ndarray:
+
+def formatar_valores_matriz(matriz: List[List[float | int]]) -> np.ndarray:
     return np.array(matriz, dtype=float)
+
+
+def exibir_figura(fig: plt.Figure, nome_arquivo: str) -> None:
+    """Salva o grafico em disco e exibe se o backend for interativo."""
+    _PASTA_GRAFICOS.mkdir(exist_ok=True)
+    caminho = _PASTA_GRAFICOS / nome_arquivo
+    fig.savefig(caminho, dpi=150, bbox_inches="tight")
+
+    backend = matplotlib.get_backend().lower()
+    if backend == "agg":
+        print(f"Grafico salvo em: {caminho}")
+        plt.close(fig)
+        return
+
+    print(f"Grafico salvo em: {caminho}")
+    plt.show()
 
 
 def exibir_painel_benchmark(resultado: ResultadoBenchmark) -> None:
@@ -49,12 +69,9 @@ def exibir_painel_benchmark(resultado: ResultadoBenchmark) -> None:
     ax2.legend()
 
     ax3 = axes[1, 0]
-    ax3.bar(
-        [str(o) for o in ordens],
-        speedup,
-        color="#3498db",
-        edgecolor="black",
-    )
+    ax3.bar(ordens, speedup, color="#3498db", edgecolor="black")
+    ax3.set_xticks(ordens)
+    ax3.set_xticklabels([str(o) for o in ordens])
     ax3.axhline(1, color="gray", linestyle="--", linewidth=1)
     ax3.set_xlabel("Ordem da matriz")
     ax3.set_ylabel("Speedup (tempo cofatores / tempo op. elementares)")
@@ -91,20 +108,21 @@ def exibir_painel_benchmark(resultado: ResultadoBenchmark) -> None:
     )
 
     plt.tight_layout()
-    plt.show()
+    exibir_figura(fig, "benchmark.png")
 
 
 def exibir_analise_matriz(
     matriz: List[List[int]],
     comparacao: dict,
 ) -> None:
-    fig, axes = plt.subplots(1, 3, figsize=(14, 4.5))
+    fig = plt.figure(figsize=(14, 6))
+    gs = fig.add_gridspec(2, 3, height_ratios=[1.4, 0.8], hspace=0.35, wspace=0.35)
     fig.suptitle("Analise da matriz informada", fontsize=14, fontweight="bold")
 
-    matriz_np = _formatar_valores_matriz(matriz)
-    triangular_np = _formatar_valores_matriz(comparacao["matriz_triangular"])
+    matriz_np = formatar_valores_matriz(matriz)
+    triangular_np = formatar_valores_matriz(comparacao["matriz_triangular"])
 
-    ax1 = axes[0]
+    ax1 = fig.add_subplot(gs[0, 0])
     im1 = ax1.imshow(matriz_np, cmap="Blues")
     ax1.set_title("Matriz inicial")
     ax1.set_xticks(range(matriz_np.shape[1]))
@@ -114,7 +132,7 @@ def exibir_analise_matriz(
             ax1.text(j, i, f"{int(matriz_np[i, j])}", ha="center", va="center", color="black")
     fig.colorbar(im1, ax=ax1, fraction=0.046)
 
-    ax2 = axes[1]
+    ax2 = fig.add_subplot(gs[0, 1])
     im2 = ax2.imshow(triangular_np, cmap="Greens")
     ax2.set_title("Matriz triangular (op. elementares)")
     ax2.set_xticks(range(triangular_np.shape[1]))
@@ -132,7 +150,7 @@ def exibir_analise_matriz(
             )
     fig.colorbar(im2, ax=ax2, fraction=0.046)
 
-    ax3 = axes[2]
+    ax3 = fig.add_subplot(gs[0, 2])
     ax3.axis("off")
     mais_rapido = (
         "Operacoes elementares"
@@ -162,12 +180,15 @@ def exibir_analise_matriz(
         bbox=dict(boxstyle="round", facecolor="#fff8e1", edgecolor="#ffcc80"),
     )
 
+    ax_bar = fig.add_subplot(gs[1, :])
     tempos = [comparacao["tempo_cofatores"], comparacao["tempo_operacoes"]]
-    ax3_bar = ax3.inset_axes([0.05, 0.05, 0.9, 0.28])
-    ax3_bar.bar(["Cofatores", "Op. elem."], tempos, color=["#e67e22", "#27ae60"])
-    ax3_bar.set_ylabel("Tempo (s)")
-    ax3_bar.set_title("Comparacao de tempo", fontsize=9)
-    ax3_bar.tick_params(labelsize=8)
+    labels = ["Cofatores", "Op. elem."]
+    posicoes = [0, 1]
+    ax_bar.bar(posicoes, tempos, color=["#e67e22", "#27ae60"], width=0.5)
+    ax_bar.set_xticks(posicoes)
+    ax_bar.set_xticklabels(labels)
+    ax_bar.set_ylabel("Tempo (s)")
+    ax_bar.set_title("Comparacao de tempo")
+    ax_bar.grid(True, axis="y", alpha=0.3)
 
-    plt.tight_layout()
-    plt.show()
+    exibir_figura(fig, "analise_matriz.png")
